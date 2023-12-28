@@ -1,0 +1,62 @@
+<resources>
+    <string name="app_name">NetMaster</string>
+    <string name="toast_permission_denied">访问文件权限被拒绝</string>
+
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">NetMaster</string>
+    <string name="second_fragment_label">查看已有规则</string>
+    <string name="app_fragment_label">请选择应用</string>
+    <string name="nav_iptables_fragment_label">查看iptables配置状态</string>
+    <string name="nav_about_fragment_label">关于</string>
+
+    <string name="previous">Previous</string>
+    <!-- menu_main 1-->
+    <string name="action_fliter">筛选</string>
+    <string name="search_view">搜索</string>
+    <string name="show_system">显示系统应用</string>
+    <string name="show_app">显示用户应用</string>
+    <!-- menu_main 2-->
+    <string name="action_import">导入配置</string>
+    <string name="action_export">导出配置</string>
+    <string name="action_copy">复制全部</string>
+    <string name="action_save">保存</string>
+    <string name="action_exit">退出</string>
+
+    <string name="action_clear_all_rules">还原默认规则</string>
+    <string name="action_apply_all_rules">应用规则</string>
+    <string name="action_iptables">iptables</string>
+    <!-- side menu -->
+    <string name="checkconfig">检查iptables配置</string>
+    <string name="checkrules">查看规则</string>
+    <string name="about">关于</string>
+    <!-- about -->
+    <string name="about_licence">
+        该软件由May Tom制作并免费发布，如果你花钱购买，说明你上当了，请立即要求全额退款。
+        该软件利用低层iptables实现对APP内外网流量分离，
+        由于安卓系统的特性，部分功能需要请求root权限才可以正常使用。
+        本软件不需要联网权限，如果弹出联网权限提示选项直接拒绝即可。
+        软件不收集任何使用者隐私信息。虽然作者已经经过测试没有展示出对系统的破坏性，
+        但还是不排除会发生如数据丢失、系统崩溃、硬件损坏等后果。
+        如果因为使用该APP导致的任何损失软件作者不因此而承担责任，
+        继续使用软件意味着同意该协议。
+    </string>
+
+    <!-- list_main -->
+    <string name="app_list_name">应用名称</string>
+    <string name="local_network">访问\n局域网</string>
+    <string name="internet_network">访问\n互联网</string>
+    <string name="rule_remind">若要手动执行命令，请进入adb shell,切换root权限，从上往下执行命令</string>
+    <!-- warning message-->
+    <string name="no_root">已经发出ROOT请求，未得到ROOT权限，操作失败</string>
+    <string name="no_root2">未获取到相关信息，请检查是否授予ROOT权限</string>
+
+
+    <!-- path of boot shell-->
+    <string name="magisk_boot_general">/data/adb/service.d</string>
+    <string name="shell">#!/system/bin/sh</string>
+
+    <!--navigation -->
+    <string name="nav_header_title">NetMaster</string>
+    <string name="nav_header_subtitle">Author@MayTom</string>
+
+</resources>
