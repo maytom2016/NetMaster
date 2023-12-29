@@ -40,7 +40,7 @@ https://cloud.tencent.com/developer/ask/sof/131209
 ### 拼接字符串参考
 https://blog.csdn.net/Tefuir111/article/details/123686854
 ### 函数多返回值参考
-https://juejin.cn/s/kotlin 多个返回值
+[https://juejin.cn/s/kotlin 多个返回值]
 ### root权限参考
 https://blog.csdn.net/Allen_ww/article/details/90701794
 ### 变量非空参考
