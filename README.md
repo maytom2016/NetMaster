@@ -34,13 +34,13 @@ https://blog.51cto.com/u_16175442/7044685
 ### progressbar加载动画参考
 https://blog.csdn.net/qq_26500807/article/details/109116623
 ###  progressbar显示操作参考
-[https://wenku.csdn.net/answer/c00a82ff6cae48e18ecd86a0b36be174#](https://wenku.csdn.net/answer/c00a82ff6cae48e18ecd86a0b36be174 "https://wenku.csdn.net/answer/c00a82ff6cae48e18ecd86a0b36be174#")
+https://wenku.csdn.net/answer/c00a82ff6cae48e18ecd86a0b36be174#
 ### recycleview子itemview的checkbox改变选定状态事件绑定参考
 https://cloud.tencent.com/developer/ask/sof/131209
 ### 拼接字符串参考
 https://blog.csdn.net/Tefuir111/article/details/123686854
 ### 函数多返回值参考
-[https://juejin.cn/s/kotlin 多个返回值](https://juejin.cn/s/kotlin%20%E5%A4%9A%E4%B8%AA%E8%BF%94%E5%9B%9E%E5%80%BC)
+https://juejin.cn/s/kotlin 多个返回值
 ### root权限参考
 https://blog.csdn.net/Allen_ww/article/details/90701794
 ### 变量非空参考
