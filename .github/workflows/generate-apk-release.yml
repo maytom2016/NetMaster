@@ -1,3 +1,5 @@
+permissions:
+  contents: write
 name: Generated APK (Upload - Create Artifact To Github Action)
 
 env:
