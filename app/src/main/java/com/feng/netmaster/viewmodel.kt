@@ -40,9 +40,11 @@ class menutoolbarvm : ViewModel() {
     //appfragment与firstfragment的列表项通信的限制APP总表
     var limitedlist : List<AppInfo>  =  mutableListOf<AppInfo>()
     //appfragment与firstfragment的列表项通信的限制APP显示表
-    var currentlist2 : List<AppInfo>  =  mutableListOf<AppInfo>()
+    var currentlist2 : MutableList<AppInfo>  =  mutableListOf<AppInfo>()
     //firstfragment多选列表，用于存储被选中项是哪些，与currentlist2显示表同步对应
-    var cur2sellist:  List<AppInfo>   = mutableListOf<AppInfo>()
+    var cur2sellist:  MutableList<AppInfo>   = mutableListOf<AppInfo>()
+    //adapter的选项，必须公开，以便activity使用
+    var mutaselcted: MutableSet<Int>  =mutableSetOf<Int>()
     //APP启动后首次加载标志
     var firstload=true
     fun containitem( list:List<AppInfo>,app: AppInfo):Boolean
@@ -68,10 +70,10 @@ class menutoolbarvm : ViewModel() {
    {
        val finditem=limitedlist.find{it.package_name== package_name}
        if(type.name==net.LOCAL.name){
-           finditem!!.connectlocalnet=bool
+           if(finditem!=null)finditem.connectlocalnet=bool
        }
        else if(type.name==net.INTERNET.name) {
-           finditem!!.connectinternet = bool
+           if(finditem!=null)finditem.connectinternet = bool
        }
    }
     fun getres():Ruleresult
@@ -81,6 +83,7 @@ class menutoolbarvm : ViewModel() {
         val res=rulmag.generaterules(reallimitedlist)
         return res
     }
+
 }
 
 enum class toolbarchecked {

@@ -92,3 +92,5 @@ data class Appinfo_Save(
 )
 @Serializable
 data class  Ruleresult(val strlist:List<String>,val dropstrlist:List<String>)
+
+

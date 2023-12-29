@@ -2,8 +2,6 @@ package com.feng.netmaster
 
 //import android.R
 //import kotlinx.coroutines.flow.internal.NoOpContinuation.context
-import android.R
-import android.app.AlertDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -19,9 +17,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import java.io.File
 
 
 /**
@@ -221,6 +216,7 @@ class FirstFragment : Fragment() {
         override fun onBindViewHolder(holder:MyViewHolder, position: Int) {
             val app: AppInfo = limiteditemfliter[position]
             holder.bind(app)
+            mutaselcted=menutoolbarvm.mutaselcted
             holder.itemView.isSelected=mutaselcted.contains(position)
             holder.itemView.setOnClickListener {
                 if (mutaselcted.contains(position)) {

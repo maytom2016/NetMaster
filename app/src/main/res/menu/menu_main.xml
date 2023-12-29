@@ -33,7 +33,7 @@
         android:id="@+id/action_fliter"
         android:icon="@drawable/ic_fliter"
         android:title="@string/action_fliter"
-        app:showAsAction="ifRoom">
+        app:showAsAction="always">
 
         <menu>
             <item
@@ -60,7 +60,7 @@
         android:id="@+id/action_rootmanager"
         android:icon="@drawable/ic_task"
         android:title="@string/action_iptables"
-        app:showAsAction="ifRoom">
+        app:showAsAction="always">
         <menu>
             <item
                 android:id="@+id/apply_all_rules"

@@ -4,10 +4,10 @@ plugins {
     id ("org.jetbrains.kotlin.plugin.serialization")
 }
 
+
 android {
     namespace = "com.feng.netmaster"
     compileSdk = 33
-
     defaultConfig {
         applicationId = "com.feng.netmaster"
         minSdk = 21
@@ -34,6 +34,7 @@ android {
     buildFeatures {
         viewBinding = true
     }
+
 }
 
 dependencies {

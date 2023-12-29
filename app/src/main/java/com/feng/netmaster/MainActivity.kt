@@ -30,6 +30,7 @@ import android.widget.Toast
 //import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.Navigation
@@ -325,7 +326,6 @@ class MainActivity : AppCompatActivity(){
             R.id.action_import ->
             {
                 ImportConfigFile()
-
             }
             R.id.action_export ->
             {
@@ -448,14 +448,15 @@ class MainActivity : AppCompatActivity(){
     fun saveconf()
     {
         val fma=FileManage()
-        if(menutoolbarvm.limitedlist.size>0) {
+//        if(menutoolbarvm.limitedlist.size>0) {
             val list=menutoolbarvm.tobesave(menutoolbarvm.limitedlist)
             val json = Json.encodeToString(list)
             fma.savecfgfile(this,json)
-        }
-        else{
-            toast("没有需要保存的规则")
-        }
+            toast("保存成功")
+//        }
+//        else{
+//            toast("没有需要保存的规则")
+//        }
     }
     fun requireruleresult(where:String):Ruleresult
     {
@@ -503,7 +504,6 @@ class MainActivity : AppCompatActivity(){
         } else {
             Manifest.permission.WRITE_EXTERNAL_STORAGE
         }
-
         val RX= RxPermissions(this).request(permission).subscribe {
             if (it) {
                 try {
@@ -540,6 +540,15 @@ class MainActivity : AppCompatActivity(){
         if (it.resultCode == RESULT_OK && uri != null && fma.checkpathlegal(uri.path)) {
             val listjsonstring=readContentFromUri(uri)
             if(listjsonstring!="error") {
+                //清空当前列表项
+                menutoolbarvm.currentlist2.clear()
+                //清空选中列表项
+                menutoolbarvm.cur2sellist.clear()
+                //清空选中项序号
+                menutoolbarvm.mutaselcted.clear()
+                //新导入项默认不选中，无须显示删除按钮
+                setvisiablebyid(R.id.action_delete,false)
+
                 menutoolbarvm.limitedlist = fma.jsonlisttolist(this, listjsonstring)
                 updatelist()
             }
