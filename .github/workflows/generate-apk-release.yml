@@ -82,8 +82,10 @@ jobs:
         id: organize_config
         run: |
           cd ${{ env.main_project_module }}/build/outputs/apk/
+          mv ./release/app-release-unsigned-signed.apk ./release/app-release-signed.apk
+          rm -rf app-release-un*.apk
           tar -czvf  release.tar.gz ./release
-          
+    
       - name: Release
         uses: softprops/action-gh-release@v1
 #      if: startsWith(github.ref, 'refs/tags/')
