@@ -71,7 +71,8 @@ jobs:
       - name: ConfigOrganze
         id: organize_config
         run: |
-          tar -czvf  ${{ env.main_project_module }}/build/outputs/apk/release.tar.gz ${{ env.main_project_module }}/build/outputs/apk/release/
+          cd ${{ env.main_project_module }}/build/outputs/apk/
+          tar -czvf  release.tar.gz ./release
           
       - name: Release
         uses: softprops/action-gh-release@v1
