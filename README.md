@@ -6,7 +6,7 @@
 ![GitHub Forks](https://img.shields.io/github/forks/maytom2016/NetMaster.svg?style=flat-square&label=Forks&logo=github)
 
 ## 用途
-该软件由May Tom制作并免费发布
+该软件由May Tom制作并免费发布。
 该软件利用低层iptables实现对APP内外网流量进行分离管理，
 由于安卓系统的特性，部分功能需要请求root权限才可以正常使用。
 本软件不需要联网权限，如果弹出联网权限提示选项直接拒绝即可。
