@@ -65,6 +65,16 @@ jobs:
           keyAlias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
+          
+      - name: ConfigOrganze
+        id: organize_config
+        run: |
+          cd ${{ env.main_project_module }}/build/outputs/apk/
+          mv ./release/app-release-unsigned-signed.apk ./release/app-release-signed.apk
+          rm -rf ./release/app-release-un*
+          rm -rf ./release/key.jks
+          rm -rf ./release/output-metadata.json
+          tar -czvf  release.tar.gz ./release
 
       # Noted For Output [main_project_module]/build/outputs/apk/release/
       - name: Upload APK Release - ${{ env.repository_name }}
@@ -77,14 +87,6 @@ jobs:
         id: get_version
         run: echo "${GITHUB_REF/refs\/tags\//}" >> $env:GITHUB_OUTPUT
              # echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-
-      - name: ConfigOrganze
-        id: organize_config
-        run: |
-          cd ${{ env.main_project_module }}/build/outputs/apk/
-          mv ./release/app-release-unsigned-signed.apk ./release/app-release-signed.apk
-          rm -rf ./release/app-release-un*.apk
-          tar -czvf  release.tar.gz ./release
     
       - name: Release
         uses: softprops/action-gh-release@v1
