@@ -17,6 +17,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.provider.DocumentsContract
 import android.util.AttributeSet
 import android.view.KeyEvent
 import android.view.Menu
@@ -27,13 +28,10 @@ import android.webkit.MimeTypeMap
 import android.widget.EditText
 import android.widget.SearchView
 import android.widget.Toast
-//import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.Navigation
 import androidx.navigation.Navigation.findNavController
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
@@ -53,8 +51,6 @@ import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.File
 import java.io.InputStreamReader
-import java.lang.Math.log
-import kotlin.math.ln
 import kotlin.properties.Delegates
 
 
@@ -66,6 +62,15 @@ class MainActivity : AppCompatActivity(){
     private lateinit var menutoolbarvm: menutoolbarvm
     private lateinit var ruleresult:Ruleresult
 //    private lateinit var thefirsttimebootapp:Boolean
+
+//private val openDocumentLauncher = registerForActivityResult(
+//    ActivityResultContracts.OpenDocument()
+//) { uri: Uri? ->
+//    // 处理所选择的文件的URI
+//    if (uri!=null){
+//        println(uri)
+//    }
+//}
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -327,6 +332,10 @@ class MainActivity : AppCompatActivity(){
             {
                 ImportConfigFile()
             }
+            R.id.action_import_ext->
+            {
+                //openDocumentLauncher.launch(arrayOf("*/*"))
+            }
             R.id.action_export ->
             {
                 ExportConfigFile()
@@ -528,9 +537,14 @@ class MainActivity : AppCompatActivity(){
     }
 
     private fun ImportConfigFile() {
-        val intent = Intent(Intent.ACTION_GET_CONTENT)
-        intent.type = "*/*"
+        //val intent = Intent(Intent.ACTION_GET_CONTENT)
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+        intent.type = "application/json"
         intent.addCategory(Intent.CATEGORY_OPENABLE)
+        val downloadsDirUri = Uri.parse(
+            "${DocumentsContract.EXTRA_INITIAL_URI.toString()}/primary:${Environment.DIRECTORY_DOWNLOADS}"
+        )
+        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI,downloadsDirUri)
         chooseFile.launch(Intent.createChooser(intent, getString(R.string.action_import)))
     }
     val chooseFile = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {

@@ -20,6 +20,12 @@
         android:orderInCategory="100"
         app:showAsAction="never"/>
     <item
+        android:id="@+id/action_import_ext"
+        android:title="@string/action_import_ext"
+        android:orderInCategory="100"
+        app:showAsAction="never"
+        android:visible="false"/>
+    <item
         android:id="@+id/action_export"
         android:title="@string/action_export"
         android:orderInCategory="100"

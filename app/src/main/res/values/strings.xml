@@ -17,6 +17,8 @@
     <string name="show_app">显示用户应用</string>
     <!-- menu_main 2-->
     <string name="action_import">导入配置</string>
+    <string name="action_import_ext">导入配置_第三方调用</string>
+
     <string name="action_export">导出配置</string>
     <string name="action_copy">复制全部</string>
     <string name="action_save">保存</string>
