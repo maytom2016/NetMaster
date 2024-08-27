@@ -63,7 +63,7 @@
         </menu>
     </item>
     <item
-        android:id="@+id/action_rootmanager"
+        android:id="@+id/action_rulemanager"
         android:icon="@drawable/ic_task"
         android:title="@string/action_iptables"
         app:showAsAction="always">

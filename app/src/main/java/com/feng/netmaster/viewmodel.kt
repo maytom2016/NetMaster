@@ -15,6 +15,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.DiffUtil
 import com.tbruyelle.rxpermissions3.RxPermissions
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -26,7 +31,13 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
+import java.io.InputStream
 import java.io.InputStreamReader
+import java.io.OutputStream
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 class menutoolbarvm : ViewModel() {
     //工具栏筛选用户APP按钮状态
@@ -40,10 +51,12 @@ class menutoolbarvm : ViewModel() {
     //appfragment与firstfragment的列表项通信的限制APP总表
     var limitedlist : List<AppInfo>  =  mutableListOf<AppInfo>()
     //appfragment与firstfragment的列表项通信的限制APP显示表
+    var addlimitedlist: List<AppInfo>  =  mutableListOf<AppInfo>()
+    //准备要增加到limitedlist的表项，用户可能取消，所以需要此表进行缓存。
     var currentlist2 : MutableList<AppInfo>  =  mutableListOf<AppInfo>()
     //firstfragment多选列表，用于存储被选中项是哪些，与currentlist2显示表同步对应
     var cur2sellist:  MutableList<AppInfo>   = mutableListOf<AppInfo>()
-    //adapter的选项，必须公开，以便activity使用
+    //firstfragmen当前选中项序号
     var mutaselcted: MutableSet<Int>  =mutableSetOf<Int>()
     //APP启动后首次加载标志
     var firstload=true
@@ -78,9 +91,9 @@ class menutoolbarvm : ViewModel() {
    }
     fun getres():Ruleresult
     {
-        val rulmag=rulemanager()
-        val reallimitedlist=rulmag.fliteappsneedrules(limitedlist)
-        val res=rulmag.generaterules(reallimitedlist)
+
+        val reallimitedlist=rulemanager.fliteappsneedrules(limitedlist)
+        val res=rulemanager.generaterules(reallimitedlist)
         return res
     }
 
@@ -199,7 +212,7 @@ class FileManage {
     }
 }
 
-class rulemanager {
+object rulemanager {
 
     fun fliteappsneedrules(list:List<AppInfo>):List<AppInfo>{
         var res:List<AppInfo> = mutableListOf<AppInfo>()
@@ -252,8 +265,165 @@ class rulemanager {
     {
         return "OUTPUT  -m owner --uid-owner=$uid -j $action"
     }
-
-
-
 }
 
+object RootCommandExecutor {
+    private var hasRootPermission = false
+    private var rootProcess: Process? = null
+
+    fun getRootPermission(): Boolean {
+        if (!hasRootPermission) {
+            try {
+                val builder = ProcessBuilder("su")
+                rootProcess = builder.start()
+                val outputStream = rootProcess!!.outputStream
+                outputStream.write("id\n".toByteArray())
+                outputStream.flush()
+//                outputStream.close()
+                val inputStream = rootProcess!!.inputStream
+                val buffer = ByteArray(1024)
+                val length = inputStream.read(buffer)
+                val result = String(buffer, 0, length)
+                println("testlog:$result")
+                println("process is:$rootProcess")
+                if (result.contains("uid=0(root)")) {
+                    hasRootPermission = true
+                    println("testlog:here is~~")
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        return hasRootPermission
+    }
+
+    fun executeCommand(command: String): String {
+        var result = ""
+        if (getRootPermission()) {
+            if (rootProcess == null) {
+//                try {
+                    val builder = ProcessBuilder("su")
+                    rootProcess = builder.start()
+//                } catch (e: java.io.IOException) {
+//                    e.printStackTrace()
+//                }
+            }
+            if(rootProcess !=null) {
+                println("process is:$rootProcess")
+                val outputStream = rootProcess!!.outputStream
+                outputStream.write("$command\n".toByteArray())
+                outputStream.flush()
+//                outputStream.close()
+                val inputStream = rootProcess!!.inputStream
+                val buffer = ByteArray(1024)
+                val length = inputStream.read(buffer)
+                result = String(buffer, 0, length)
+            }
+        } else {
+            result = "无法获取root权限，无法执行命令"
+        }
+        return result
+    }
+    fun executeCommands(commands: List<String>): List<String> {
+        var result = mutableListOf<String>()
+        if (getRootPermission()) {
+            if (rootProcess == null) {
+                val builder = ProcessBuilder("su")
+                rootProcess = builder.start()
+            }
+            if (rootProcess != null) {
+                println("process is: $rootProcess")
+                val outputStream = rootProcess!!.outputStream
+                val reader = BufferedReader(InputStreamReader(rootProcess!!.inputStream))
+                for (command in commands) {
+                    outputStream.write("$command\n".toByteArray())
+                }
+                outputStream.flush()
+
+                var line: String
+                while(reader.ready()) {
+                    line=reader.readLine()
+                    result.add(line)
+                }
+            }
+        } else {
+            result.add("无法获取root权限，无法执行命令")
+        }
+        return result
+    }
+    suspend fun executeCommands_suspd(commands: List<String>,channel: Channel<String>): String {
+        var result = ""
+        if (getRootPermission()) {
+            if (rootProcess == null) {
+                val builder = ProcessBuilder("su")
+                rootProcess = builder.start()
+            }
+            if (rootProcess != null) {
+                println("process is: $rootProcess")
+                val outputStream = rootProcess!!.outputStream
+                for (command in commands) {
+                    outputStream.write("$command\n".toByteArray())
+                }
+                outputStream.flush()
+                // 不再需要手动关闭outputStream，因为不会影响BufferedReader的读取
+                var boollineread=true
+                val reader = BufferedReader(InputStreamReader(rootProcess!!.inputStream))
+                var line: String?
+                do{
+                    line=reader.readLine()
+                    result += line
+                    if(line.contains("/system/bin/sh"))boollineread=false
+                    line?.let { channel.trySend(it) }
+                    //println("line is$line")
+                    println("boollineread is $boollineread")
+                }while (reader.ready()or boollineread)
+
+//                reader.useLines { lines ->
+//                    lines.forEach {
+//                    println("line is" + it)
+//                     }
+//                }
+
+
+                channel.close()
+                println("channel is closed")
+
+            }
+        } else {
+            result = "无法获取root权限，无法执行命令"
+        }
+
+        return result
+    }
+    fun getRootProcess(): Process {
+        if (rootProcess == null) {
+            try {
+                val builder = ProcessBuilder("su")
+                rootProcess = builder.start()
+            } catch (e: java.io.IOException) {
+                e.printStackTrace()
+            }
+        }
+        return rootProcess!!
+    }
+
+    fun destroyRootProcess() {
+        rootProcess?.let { process ->
+            try {
+                val reader: BufferedReader=BufferedReader(InputStreamReader(rootProcess?.inputStream))
+                reader.close()
+                val inputStream: InputStream? = process.inputStream
+                inputStream?.close()
+                val outputStream: OutputStream? = process.outputStream
+                outputStream?.close()
+                val errorStream: InputStream? = process.errorStream
+                errorStream?.close()
+
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+            process.destroy()
+            rootProcess = null
+        }
+    }
+}

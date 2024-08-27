@@ -94,16 +94,11 @@ class appFragment : Fragment(R.layout.fragment_app) {
             bean.setPackage_nameKotlin(p.applicationInfo.packageName)
             bean.setUidKotlin(p.applicationInfo.uid)
             val flags = p.applicationInfo.flags
-
-            if (flags and ApplicationInfo.FLAG_SYSTEM !== 0 && !isFilterSystem) {
-
-                //           bean.setSystem(true)
-            }
-            else if(flags and ApplicationInfo.FLAG_SYSTEM == 0 && !isFilterUserApp){
-
-            }
-            else if(menutoolbarvm.containitem(menutoolbarvm.limitedlist,bean)){
-            }
+            val flag_sys=ApplicationInfo.FLAG_SYSTEM
+            if ((flags and flag_sys != 0 && !isFilterSystem) // 第一个条件
+                || (flags and flag_sys == 0 && !isFilterUserApp) // 第二个条件
+                || menutoolbarvm.containitem(menutoolbarvm.limitedlist, bean)) {}// 第三个条件
+                // 第一个条件筛选不显示system系统应用，第二个条件不显示用户应用，第三个条件不重复增加同一个应用。
             else {
                 if(flags and ApplicationInfo.FLAG_SYSTEM == 0) {bean.setclassify(toolbarchecked.USER)}
                 else{bean.setclassify(toolbarchecked.SYSTEM)}
@@ -140,6 +135,7 @@ class appFragment : Fragment(R.layout.fragment_app) {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        menutoolbarvm.addlimitedlist= mutableListOf<AppInfo>()
         _binding = null
     }
     suspend fun refleshfliterview(searchname: String){
@@ -216,11 +212,13 @@ class appFragment : Fragment(R.layout.fragment_app) {
             if( mutilSelectedList.size>0)
             {
 //                val main =itemView.view.context as MainActivity
-                ctx.setapplyvisiable(true)
+                ctx.setvisiablebyid(R.id.action_apply,true)
+//                ctx.setapplyvisiable(true)
             }
             else
             {
-                ctx.setapplyvisiable(false)
+                ctx.setvisiablebyid(R.id.action_apply,false)
+//                ctx.setapplyvisiable(false)
             }
         }
         override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
@@ -228,16 +226,16 @@ class appFragment : Fragment(R.layout.fragment_app) {
             holder.itemView.isSelected=mutilSelectedList.contains(position)
             holder.itemView.setOnClickListener{
 
-                menutoolbarvm.limitedlist
+//                menutoolbarvm.limitedlist
                 if (mutilSelectedList.contains(position)) {
                     mutilSelectedList.remove(position)
                     holder.itemView.isSelected= false
-                    menutoolbarvm.limitedlist-=app
+                    menutoolbarvm.addlimitedlist-=app
                     //Toast.makeText(itemView.view.context, "取消选中${position}", Toast.LENGTH_SHORT).show()
                 } else {
                     mutilSelectedList.add(position)
                     holder.itemView.isSelected = true
-                    menutoolbarvm.limitedlist+=app
+                    menutoolbarvm.addlimitedlist+=app
                     //Toast.makeText(itemView.view.context, "选中${position}", Toast.LENGTH_SHORT).show()
                 }
                 ctx.Letsearchviewlosefocus()

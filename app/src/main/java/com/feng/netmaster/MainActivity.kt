@@ -23,6 +23,7 @@ import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.View.GONE
 import android.view.WindowManager
 import android.webkit.MimeTypeMap
 import android.widget.EditText
@@ -101,29 +102,12 @@ class MainActivity : AppCompatActivity(){
         }
         binding.searchView.setOnQueryTextListener(/* listener = */ object : SearchView.OnQueryTextListener {
         override fun onQueryTextSubmit(p0: String?): Boolean {
+            searchbytext(p0)
+//            toast("test!")
             return false
         }
         override fun onQueryTextChange(p0: String?): Boolean {
-                    val navHostFragment =
-                        supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main) as NavHostFragment
-                    val app = navHostFragment.childFragmentManager.fragments[0]
-            if(app.javaClass.name=="com.feng.netmaster.appFragment") {
-                val fragment = app as appFragment
-                CoroutineScope(Dispatchers.Main).async {
-//                    if (p0 != null) {
-                        async { p0?.let { fragment.refleshfliterview(it) } }
-//                    }
-                }
-            }
-            else if(app.javaClass.name=="com.feng.netmaster.FirstFragment")
-            {
-                val fragment = app as FirstFragment
-                CoroutineScope(Dispatchers.Main).async{
-                    async { p0?.let { fragment.refleshfliterview(it) } }
-                }
-
-            }
-
+            searchbytext(p0)
             return false
         }
 
@@ -145,6 +129,27 @@ class MainActivity : AppCompatActivity(){
         }
 
 
+    }
+    fun searchbytext(p0: String?){
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main) as NavHostFragment
+        val app = navHostFragment.childFragmentManager.fragments[0]
+        if(app.javaClass.name=="com.feng.netmaster.appFragment") {
+            val fragment = app as appFragment
+            CoroutineScope(Dispatchers.Main).async {
+//                    if (p0 != null) {
+                async { p0?.let { fragment.refleshfliterview(it) } }
+//                    }
+            }
+        }
+        else if(app.javaClass.name=="com.feng.netmaster.FirstFragment")
+        {
+            val fragment = app as FirstFragment
+            CoroutineScope(Dispatchers.Main).async{
+                async { p0?.let { fragment.refleshfliterview(it) } }
+            }
+
+        }
     }
     fun Letsearchviewlosefocus()
     {
@@ -232,12 +237,13 @@ class MainActivity : AppCompatActivity(){
             fragment.deletemutiitem(menutoolbarvm.currentlist2)
         }
     }
-    fun setapplyvisiable(boolean: Boolean){
-        binding.toolbar.menu.findItem(R.id.action_apply).isVisible = boolean
-    }
-    fun setdeletevisiable(boolean: Boolean){
-        binding.toolbar.menu.findItem(R.id.action_delete).isVisible = boolean
-    }
+
+//    fun setapplyvisiable(boolean: Boolean){
+//        binding.toolbar.menu.findItem(R.id.action_apply).isVisible = boolean
+//    }
+//    fun setdeletevisiable(boolean: Boolean){
+//        binding.toolbar.menu.findItem(R.id.action_delete).isVisible = boolean
+//    }
     fun setvisiablebyid(id:Int,boolean: Boolean)
     {
         binding.toolbar.menu.findItem(id).isVisible = boolean
@@ -245,6 +251,13 @@ class MainActivity : AppCompatActivity(){
     fun setsearchviewvisiable(viewvisable:Int)
     {
         binding.searchView.visibility=viewvisable
+        //防止隐藏后仍然对用户操作进行反应
+        if(viewvisable==GONE)
+        binding.searchView.isEnabled=false
+        else
+        {
+            binding.searchView.isEnabled=true
+        }
     }
     fun loadappfromcfg():List<AppInfo> {
         val path="appinfo.json"
@@ -259,7 +272,12 @@ class MainActivity : AppCompatActivity(){
             return mutableListOf<AppInfo>()
         }
     }
-
+    //
+    fun mergelimitedList() {
+        val newItems = menutoolbarvm.addlimitedlist.filter { it!in menutoolbarvm.limitedlist }
+        val newLimitedList = (menutoolbarvm.limitedlist + newItems).toMutableList() as List<AppInfo>
+        menutoolbarvm.limitedlist = newLimitedList
+    }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -316,12 +334,15 @@ class MainActivity : AppCompatActivity(){
                 val navController = findNavController(R.id.nav_host_fragment_content_main)
                 navController.navigateUp(appBarConfiguration)
                 showfabimex()
-                setapplyvisiable(false)
+                mergelimitedList()
+                //添加后自动保存一次设置，避免没有手动保存退出后被杀后台丢失
+                saveconf()
+                setvisiablebyid(R.id.action_apply,false)
             }
 
             R.id.action_delete -> {
                 deleteitem()
-                setdeletevisiable(false)
+                setvisiablebyid(R.id.action_delete,false)
             }
 
             R.id.action_save ->
@@ -355,21 +376,33 @@ class MainActivity : AppCompatActivity(){
             }
             R.id.apply_all_rules ->
             {
+                //val a=RootCommandExecutor.getRootPermission()
+//                var text=RootCommandExecutor.executeCommand("date")
+//                toast("root permitsiion is"+text)
+
                 val filerules=requireruleresult("file")
                 val listrules=requireruleresult("list")
+                println("filerules$listrules")
+                println("listrules$listrules")
                 if (filerules.strlist==listrules.strlist) {
                     //不需要应用新规则
                     ruleresult=filerules
                     toast("没有规则需要应用")
                 }
                 else {
-                    val roottest = kotlin.runCatching { getroot() }
-                    if (roottest.isSuccess) {
+//                    val roottest = kotlin.runCatching { getroot() }
+//                    if (roottest.isSuccess) {
+
+                    if (RootCommandExecutor.getRootPermission()) {
                         ruleresult = listrules
                         //需要应用新规则
-                        val notestr = "规则已还原"
+//                        val notestr = "规则已还原"
                         //擦除先前规则
-                        val res=manage_rules(filerules.dropstrlist, notestr)
+                        var res=true
+                        //还原规则只有一种情况下会影响后面应用新规则，那就是还原失败，res会有错误文字，还原规则为空等情况不影响应用新规则。
+                        if (!filerules.dropstrlist.isEmpty()) {
+                            res = manage_rules(filerules.dropstrlist, "")
+                        }
                         //应用新规则
                         if (res) {
                             val notestr2 = "增加规则成功"
@@ -388,12 +421,13 @@ class MainActivity : AppCompatActivity(){
             }
             R.id.clear_all_rules->
             {
-                val roottest = kotlin.runCatching { getroot() }
-                if (roottest.isSuccess) {
+//                val roottest = kotlin.runCatching { getroot() }
+//                if (roottest.isSuccess) {
+                if (RootCommandExecutor.getRootPermission()){
                     ruleresult = requireruleresult("file")
                     if (ruleresult.dropstrlist.isNotEmpty()) {
                         val notestr = "规则已还原"
-                        val res=manage_rules(ruleresult.dropstrlist, notestr)
+                        val res = manage_rules(ruleresult.dropstrlist, notestr)
                         if(res) {
                             FileManage().deleterules(this)
                             removerulesfromboot()
@@ -419,35 +453,41 @@ class MainActivity : AppCompatActivity(){
     }
     fun addrulestoboot(rulestr: List<String>) {
         val path = getString(R.string.magisk_boot_general) + "/rules.sh"
-        val roottest = kotlin.runCatching { getroot() }
-        if (roottest.isSuccess) {
-            var process = Runtime.getRuntime().exec("su")
-            val os = DataOutputStream(process.outputStream)
-            val shell = getString(R.string.shell)
-            os.writeBytes("echo  \"$shell\">$path\n")
-            for (p in rulestr) {
-                os.writeBytes("echo  $p>>$path\n")
+//        val roottest = kotlin.runCatching { getroot() }
+//        if (roottest.isSuccess) {
+        if (RootCommandExecutor.getRootPermission()) {
+//            var process = Runtime.getRuntime().exec("su")
+            val process=RootCommandExecutor.getRootProcess()
+            if(process!=null) {
+                val os = DataOutputStream(process.outputStream)
+                val shell = getString(R.string.shell)
+                os.writeBytes("echo  \"$shell\">$path\n")
+                for (p in rulestr) {
+                    os.writeBytes("echo  $p>>$path\n")
+                }
+                os.writeBytes("chmod +x $path\n")
+//                os.writeBytes("exit\n")
+                os.flush()
+//                process.waitFor()
+//                os.close()
             }
-            os.writeBytes("chmod +x $path\n")
-            os.writeBytes("exit\n")
-            os.flush()
-            process.waitFor()
-            os.close()
         }
     }
     fun removerulesfromboot()
     {
         val path = getString(R.string.magisk_boot_general) + "/rules.sh"
-        val roottest = kotlin.runCatching { getroot() }
-        if (roottest.isSuccess) {
-            var process = Runtime.getRuntime().exec("su")
+//        val roottest = kotlin.runCatching { getroot() }
+//        if (roottest.isSuccess) {
+//            var process = Runtime.getRuntime().exec("su")
+        if (RootCommandExecutor.getRootPermission()) {
+            val process=RootCommandExecutor.getRootProcess()
             val os = DataOutputStream(process.outputStream)
             val shell = getString(R.string.shell)
             os.writeBytes("echo \"\">$path\n")
-            os.writeBytes("exit\n")
+//            os.writeBytes("exit\n")
             os.flush()
-            process.waitFor()
-            os.close()
+//            process.waitFor()
+//            os.close()
         }
     }
     private fun getMimeType(filePath: String): String? {
@@ -482,29 +522,44 @@ class MainActivity : AppCompatActivity(){
     }
     fun manage_rules(managelist:List<String>,notestr:String):Boolean
     {
-                var process = Runtime.getRuntime().exec("su")
-                val os = DataOutputStream(process.outputStream)
-                val reader = BufferedReader(InputStreamReader(process.inputStream))
-                for (p in managelist) {
-                    os.writeBytes(p + "\n")
-                }
-        //若用户拒绝root权限，该条命令不会输出字符，可以防止因为拒绝ROOT权限导致判断错误。
-                os.writeBytes("date\n")
-                os.writeBytes("exit\n")
-                os.flush()
-                process.waitFor()
-                val text=reader.useLines { it.toList()}
+
+//        var process = Runtime.getRuntime().exec("su")
+
+//        val os = DataOutputStream(process.outputStream)
+//        val reader = BufferedReader(InputStreamReader(process.inputStream))
+//        for (p in managelist) {
+//            os.writeBytes(p + "\n")
+//        }
+//若用户拒绝root权限，该条命令不会输出字符，可以防止因为拒绝ROOT权限导致判断错误。
+//        os.writeBytes("date\n")
+//        os.writeBytes("exit\n")
+//        os.flush()
+//        process.waitFor()
+//        val text=reader.useLines { it.toList()}
 //                println("text size is"+text.size.toString())
-                os.close()
-                process.destroy()
-        if(text.size>0)
+//        os.close()
+//        process.destroy()
+//
+        val isroot=RootCommandExecutor.getRootPermission()
+        if(isroot && managelist.size>0)
         {
-            toast(notestr)
-            return true
+            var text=RootCommandExecutor.executeCommands(managelist)
+
+            if(text.size>0)
+            {
+                //执行失败时有错误提示
+                return false
+            }
+            if (notestr.length!=0) {
+                toast(notestr)
+            }
         }
         //拒绝ROOT权限会跳转此处
-        toast("没有获取到root权限，无法还原规则")
-        return false
+        else {
+            toast("没有获取到root权限，无法还原规则")
+        }
+        //执行成功时不会有回显示
+        return true
     }
     fun ExportConfigFile(){
         val path = Environment.getExternalStorageDirectory().absolutePath+"/Download/appinfo.json"
@@ -611,7 +666,7 @@ class MainActivity : AppCompatActivity(){
         setvisiablebyid(R.id.action_export,true)
         setvisiablebyid(R.id.action_save,true)
         setvisiablebyid(R.id.action_fliter,true)
-        setvisiablebyid(R.id.action_rootmanager,true)
+        setvisiablebyid(R.id.action_rulemanager,true)
         setvisiablebyid(R.id.action_copy,false)
         setvisiablebyid(R.id.action_apply,false)
 
@@ -622,7 +677,7 @@ class MainActivity : AppCompatActivity(){
         setvisiablebyid(R.id.action_copy,false)
         setvisiablebyid(R.id.action_import,false)
         setvisiablebyid(R.id.action_export,false)
-        setvisiablebyid(R.id.action_rootmanager,false)
+        setvisiablebyid(R.id.action_rulemanager,false)
         setvisiablebyid(R.id.action_delete,false)
     }
     fun hidefabimexforiptablesFragment()
@@ -631,7 +686,7 @@ class MainActivity : AppCompatActivity(){
         setvisiablebyid(R.id.action_copy,false)
         setvisiablebyid(R.id.action_import,false)
         setvisiablebyid(R.id.action_export,false)
-        setvisiablebyid(R.id.action_rootmanager,false)
+        setvisiablebyid(R.id.action_rulemanager,false)
         setvisiablebyid(R.id.action_fliter,false)
         setvisiablebyid(R.id.action_delete,false)
         setvisiablebyid(R.id.action_apply,false)
@@ -641,7 +696,7 @@ class MainActivity : AppCompatActivity(){
     {
         binding.fab.hide()
         setvisiablebyid(R.id.action_copy,true)
-        setvisiablebyid(R.id.action_rootmanager,true)
+        setvisiablebyid(R.id.action_rulemanager,true)
         setvisiablebyid(R.id.action_import,false)
         setvisiablebyid(R.id.action_export,false)
         setvisiablebyid(R.id.action_fliter,false)
@@ -689,6 +744,13 @@ class MainActivity : AppCompatActivity(){
         }
         return false
 
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        println("MainActivity"+"onDestroy: Activity is being destroyed")
+        // 同样可以进行资源释放等操作
+        RootCommandExecutor.destroyRootProcess()
     }
 //    override fun onBackPressed() {
 //

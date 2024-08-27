@@ -196,12 +196,12 @@ class FirstFragment : Fragment() {
             if(mutaselcted.size>0)
             {
                 val main =itemView.view.context as MainActivity
-                main.setdeletevisiable(true)
+                main.setvisiablebyid(R.id.action_delete,true)
             }
             else
             {
                 val main =itemView.view.context as MainActivity
-                main.setdeletevisiable(false)
+                main.setvisiablebyid(R.id.action_delete,false)
             }
         }
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
@@ -254,5 +254,6 @@ class FirstFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+
     }
 }
