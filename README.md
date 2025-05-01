@@ -79,6 +79,10 @@ https://github.com/topjohnwu/Magisk/blob/master/docs/guides.md#boot-scripts
 
 在/data/adb/service.d放置执行脚本
 
+后面换成/data/adb/post-fs-data.sh路径
+
+因为magisk-delta不认service.d，导致开机配置失效。
+
 使用echo写入脚本，并且授权运行权限。
 
 ### 安卓请求权限
