@@ -452,7 +452,8 @@ class MainActivity : AppCompatActivity(){
         return NullPointerException()
     }
     fun addrulestoboot(rulestr: List<String>) {
-        val path = getString(R.string.magisk_boot_general) + "/rules.sh"
+//        val path = getString(R.string.magisk_boot_general) + "/rules.sh"
+        val path2 = getString(R.string.magisk_delta_boot) + "/rules.sh"
 //        val roottest = kotlin.runCatching { getroot() }
 //        if (roottest.isSuccess) {
         if (RootCommandExecutor.getRootPermission()) {
@@ -461,11 +462,14 @@ class MainActivity : AppCompatActivity(){
             if(process!=null) {
                 val os = DataOutputStream(process.outputStream)
                 val shell = getString(R.string.shell)
-                os.writeBytes("echo  \"$shell\">$path\n")
+//                os.writeBytes("echo  \"$shell\">$path\n")
+                os.writeBytes("echo  \"$shell\">$path2\n")
                 for (p in rulestr) {
-                    os.writeBytes("echo  $p>>$path\n")
+//                    os.writeBytes("echo  $p>>$path\n")
+                    os.writeBytes("echo  $p>>$path2\n")
                 }
-                os.writeBytes("chmod +x $path\n")
+//                os.writeBytes("chmod +x $path\n")
+                os.writeBytes("chmod +x $path2\n")
 //                os.writeBytes("exit\n")
                 os.flush()
 //                process.waitFor()

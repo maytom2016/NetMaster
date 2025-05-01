@@ -55,6 +55,7 @@
 
     <!-- path of boot shell-->
     <string name="magisk_boot_general">/data/adb/service.d</string>
+    <string name="magisk_delta_boot">/data/adb/post-fs-data.d</string>
     <string name="shell">#!/system/bin/sh</string>
 
     <!--navigation -->

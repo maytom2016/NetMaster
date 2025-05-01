@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
+import android.text.style.MetricAffectingSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,7 +18,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import com.feng.netmaster.databinding.FragmentIptablesBinding
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.channels.*
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import java.util.regex.Pattern
@@ -29,9 +30,9 @@ class iptablesFragment : Fragment() {
     private var finnaloutput: SpannableStringBuilder =SpannableStringBuilder("")
     private val textrecycle = Channel<String>(Channel.UNLIMITED)
     private val menutoolbarvm: menutoolbarvm by activityViewModels()
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
+//    override fun onCreate(savedInstanceState: Bundle?) {
+//        super.onCreate(savedInstanceState)
+//    }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -43,7 +44,7 @@ class iptablesFragment : Fragment() {
         if (RootCommandExecutor.getRootPermission()) {
             val cmds = listOf(
                 "iptables -L OUTPUT --line-numbers\n",
-                "cd /data/adb/service.d/",
+                "cd "+ctx.getString(R.string.magisk_delta_boot),
                 "ls rules.sh -l",
                 "cat rules.sh"
             )
@@ -56,19 +57,19 @@ class iptablesFragment : Fragment() {
                 finnaloutput.addline()
                 for(value in textrecycle) {
                     if (!value.contains(("oem_out"))) {
-                        var uid =finduidfromtext(value)
+                        val uid =finduidfromtext(value)
                         if (uid!=0 && uid!=null){
                             var formatspace:String
-                            val appname=getappnamefromlimitedlist(uid)
+                            val appname= getappnamefromlimitedlist(uid)
                             if (appname?.containsChinese() == true) {
-                                val num = 10 - ((appname?.length) ?: 10)
+                                val num = 10 - appname.length
                                 formatspace = "\u3000".repeat(num)
                             }
                             else
                             {
                                 val num = 10 - ((appname?.length) ?: 10)
-                                formatspace = "\u3000\u3000".repeat(num)
-//                                formatspace = "  ".repeat(num)+" ".repeat(3)
+                                formatspace = "\u3000".repeat(num*2)
+//                                formatspace = "\u3000".repeat(num)+" "
                             }
                             val spannableString = SpannableStringBuilder(appname + formatspace + value)
                             val endIndex =appname?.length?: 0
@@ -86,7 +87,7 @@ class iptablesFragment : Fragment() {
                         finnaloutput.addline()
                     }
                     if(value.contains("destination")){
-                        val formatspace="应用中文名"+"\u3000".repeat(5)
+                        val formatspace="应用名"+"\u3000".repeat(7)
                         finnaloutput.append(SpannableStringBuilder(formatspace+value))
                     }
                 }
@@ -102,6 +103,18 @@ class iptablesFragment : Fragment() {
 
         return binding.root
     }
+
+    fun String.toDBC():String {
+        val c = this.toCharArray()
+        for (i in c.indices) {
+            if (c[i].code == 12288) {
+                c[i] = 32.toChar()
+                continue
+            }
+            if (c[i].code > 65280 && c[i].code < 65375) c[i] = (c[i].code - 65248).toChar()
+        }
+        return String(c)
+    }
     fun String.containsChinese(): Boolean {
         return this.any { it.code in 0x4E00..0x9FA5 }
     }
@@ -115,7 +128,7 @@ class iptablesFragment : Fragment() {
     }
     fun SpannableStringBuilder.addline()
     {
-        val str="\n----------------------------------------------------------------------------------------------------------------------------\n"
+        val str="\n------------------------------------------------------------------------------------------------------------------------\n"
         val spannableString=SpannableStringBuilder(str)
         val foregroundColorSpan = ForegroundColorSpan(Color.WHITE)
         spannableString.setSpan(foregroundColorSpan,
@@ -125,7 +138,7 @@ class iptablesFragment : Fragment() {
 
     fun getappnamefromlimitedlist(uid: Int):String?
     {
-        val app=menutoolbarvm.limitedlist.find({ it.uid == uid})
+        val app=menutoolbarvm.limitedlist.find{ it.uid == uid}
         println("匹配到的appname: ${app?.label}")
         return app?.label
     }

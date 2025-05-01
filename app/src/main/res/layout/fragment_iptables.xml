@@ -46,7 +46,6 @@
                         android:textStyle="bold"
                         android:textColor="@color/white"
                         android:typeface="monospace"
-
                         android:text="" />
         </HorizontalScrollView>
 
