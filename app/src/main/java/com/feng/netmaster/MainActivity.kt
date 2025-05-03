@@ -7,12 +7,14 @@ package com.feng.netmaster
 
 
 import android.Manifest
+import android.Manifest.permission
 import android.app.AlertDialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -29,8 +31,10 @@ import android.webkit.MimeTypeMap
 import android.widget.EditText
 import android.widget.SearchView
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.Navigation.findNavController
@@ -42,7 +46,6 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.feng.netmaster.databinding.ActivityMainBinding
 import com.google.android.material.navigation.NavigationView
-import com.tbruyelle.rxpermissions3.RxPermissions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -52,6 +55,8 @@ import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.File
 import java.io.InputStreamReader
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 import kotlin.properties.Delegates
 
 
@@ -64,14 +69,6 @@ class MainActivity : AppCompatActivity(){
     private lateinit var ruleresult:Ruleresult
 //    private lateinit var thefirsttimebootapp:Boolean
 
-//private val openDocumentLauncher = registerForActivityResult(
-//    ActivityResultContracts.OpenDocument()
-//) { uri: Uri? ->
-//    // 处理所选择的文件的URI
-//    if (uri!=null){
-//        println(uri)
-//    }
-//}
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -566,33 +563,12 @@ class MainActivity : AppCompatActivity(){
         return true
     }
     fun ExportConfigFile(){
-        val path = Environment.getExternalStorageDirectory().absolutePath+"/Download/appinfo.json"
-        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            Manifest.permission.MANAGE_EXTERNAL_STORAGE
-        } else {
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-        }
-        val RX= RxPermissions(this).request(permission).subscribe {
-            if (it) {
-                try {
-                    val myfile = File(path)
-                    val list=menutoolbarvm.tobesave(menutoolbarvm.limitedlist)
-                    val json = Json.encodeToString(list)
-                    myfile.writeText(json)
-                    toast("配置文件已经导出在"+path)
-//                    toast(getMimeType(path))
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-
-        }
-        if(RX.toString().contains("0"))
-        {
-            toast(getString(R.string.toast_permission_denied))
-        }
-        RX.dispose()
-
+//        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+//            Manifest.permission.MANAGE_EXTERNAL_STORAGE
+//        } else {
+//            Manifest.permission.WRITE_EXTERNAL_STORAGE
+//        }
+        FileUtils.pickOutputDirectory(this)
     }
 
     private fun ImportConfigFile() {
@@ -621,9 +597,16 @@ class MainActivity : AppCompatActivity(){
                 menutoolbarvm.mutaselcted.clear()
                 //新导入项默认不选中，无须显示删除按钮
                 setvisiablebyid(R.id.action_delete,false)
-
-                menutoolbarvm.limitedlist = fma.jsonlisttolist(this, listjsonstring)
-                updatelist()
+                val limitlist=fma.jsonlisttolist(this, listjsonstring)
+                if (limitlist.isNotEmpty())
+                {
+                    menutoolbarvm.limitedlist = limitlist
+                    updatelist()
+                }
+                else
+                {
+                    toast("无效配置文件")
+                }
             }
             else
             {
@@ -637,27 +620,22 @@ class MainActivity : AppCompatActivity(){
         }
     }
     private fun readContentFromUri(uri: Uri):String {
-        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            Manifest.permission.READ_MEDIA_IMAGES
-        } else {
-            Manifest.permission.READ_EXTERNAL_STORAGE
-        }
+//        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+//            Manifest.permission.READ_MEDIA_IMAGES
+//        } else {
+//            Manifest.permission.READ_EXTERNAL_STORAGE
+//        }
         var res="error"
-        val RX=RxPermissions(this).request(permission).subscribe {
-                if (it) {
-                    try {
-                        contentResolver.openInputStream(uri).use { input ->
-                           res=input?.bufferedReader()?.readText().toString()
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                } else {
-                    toast(getString(R.string.toast_permission_denied))
-                }
+        try {
+            contentResolver.openInputStream(uri)?.use { input ->
+                res = input.bufferedReader().readText()
             }
-        RX.dispose()
+        } catch (e: Exception) {
+            toast("Error: ${e.message}")
+        }
+//        println(res)
         return res
+
     }
     fun toast(meg:String?)
     {
@@ -756,6 +734,20 @@ class MainActivity : AppCompatActivity(){
         // 同样可以进行资源释放等操作
         RootCommandExecutor.destroyRootProcess()
     }
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        val dirUri = FileUtils.handleActivityResult(this, requestCode, resultCode, data)
+        dirUri?.let {
+            val list=menutoolbarvm.tobesave(menutoolbarvm.limitedlist)
+            val json = Json.encodeToString(list)
+            val success = FileUtils.saveToDirectory(this, it, "appinfo.json", json)
+            if (success) {
+                Toast.makeText(this, "保存成功", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
 //    override fun onBackPressed() {
 //
 //        super.onBackPressed()

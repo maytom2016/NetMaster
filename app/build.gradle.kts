@@ -10,10 +10,10 @@ android {
     compileSdk = 34
     defaultConfig {
         applicationId = "com.feng.netmaster"
-        minSdk = 21
+        minSdk = 23
         targetSdk = 34
         versionCode = 1
-        versionName = "1.1.1"
+        versionName = "1.1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -48,8 +48,6 @@ dependencies {
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("android.arch.lifecycle:viewmodel:1.1.1")
     implementation("androidx.fragment:fragment-ktx:1.6.2")
-    implementation("com.github.tbruyelle:rxpermissions:0.12")
-    implementation ("io.reactivex.rxjava3:rxjava:3.1.4")
     implementation("com.sealwu:kscript-tools:1.0.22")
 
 //    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")

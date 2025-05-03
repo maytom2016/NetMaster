@@ -4,10 +4,10 @@
     <!--光明正大读取应用列表权限-->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
       tools:ignore="QueryAllPackagesPermission" />
-  <!--手机存储-->
-   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-   <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+  <!--手机存储,使用intent请求代替-->
+<!--   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />-->
+<!--   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />-->
+<!--   <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />-->
 
 
    <application

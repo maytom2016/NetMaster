@@ -2,6 +2,7 @@ package com.feng.netmaster
 
 
 import android.Manifest
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -10,11 +11,12 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.Settings.Global.getString
+import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.DiffUtil
-import com.tbruyelle.rxpermissions3.RxPermissions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.*
@@ -25,6 +27,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.Json.Default.encodeToString
+import org.json.JSONException
 import java.io.BufferedInputStream
 import java.io.BufferedReader
 import java.io.File
@@ -165,20 +168,30 @@ class FileManage {
     }
     fun jsonlisttolist(ctx:Context,listjsonstring:String):List<AppInfo>
     {
-        val savelist:List<Appinfo_Save> = Json.decodeFromString(listjsonstring)
-        val packageManager = ctx.packageManager
-        val list = packageManager.getInstalledPackages(0)
-        var nt: PackageInfo? =null
-        var applist:List<AppInfo> = mutableListOf<AppInfo>()
-        var app:AppInfo=AppInfo()
-        for (p in savelist) {
-            nt = list.find { it.applicationInfo.packageName == p.package_name }
-            if (nt != null) {
-                app = app.tobeself(p, nt.applicationInfo.loadIcon(packageManager))
-                applist += app
-                app = AppInfo()
+            val savelist:List<Appinfo_Save>
+            // 先验证JSON格式有效性
+            try{
+                savelist=Json.decodeFromString(listjsonstring)
+            } catch (e: JSONException) {
+                Log.e("JSON", "Invalid JSON: ${e.message}")
+                return emptyList() // 返回空列表或抛出异常
+            } catch (e: Exception) {
+                Log.e("JSON", "Unexpected error", e)
+                return emptyList()
             }
-        }
+            val packageManager = ctx.packageManager
+            val list = packageManager.getInstalledPackages(0)
+            var nt: PackageInfo? =null
+            var applist:List<AppInfo> = mutableListOf<AppInfo>()
+            var app:AppInfo=AppInfo()
+            for (p in savelist) {
+                nt = list.find { it.applicationInfo.packageName == p.package_name }
+                if (nt != null) {
+                    app = app.tobeself(p, nt.applicationInfo.loadIcon(packageManager))
+                    applist += app
+                    app = AppInfo()
+                }
+            }
         return applist
     }
     fun saverule(context: Context,ruleresult:Ruleresult){
@@ -424,6 +437,46 @@ object RootCommandExecutor {
             }
             process.destroy()
             rootProcess = null
+        }
+    }
+}
+
+object FileUtils {
+    private const val REQUEST_CODE_DIR = 1001
+
+    fun pickOutputDirectory(activity: Activity) {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+                    Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+        }
+        activity.startActivityForResult(intent, REQUEST_CODE_DIR)
+    }
+
+    fun handleActivityResult(activity: Activity, requestCode: Int, resultCode: Int, data: Intent?): Uri? {
+        if (requestCode == REQUEST_CODE_DIR && resultCode == Activity.RESULT_OK) {
+            return data?.data?.also { uri ->
+                activity.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                )
+            }
+        }
+        return null
+    }
+
+    fun saveToDirectory(context: Context, dirUri: Uri, fileName: String, content: String): Boolean {
+        return try {
+            val dir = DocumentFile.fromTreeUri(context, dirUri)
+            dir?.createFile("application/json", fileName)?.uri?.let { fileUri ->
+                context.contentResolver.openOutputStream(fileUri)?.use {
+                    it.write(content.toByteArray())
+                    true
+                }
+            } ?: false
+        } catch (e: Exception) {
+            false
         }
     }
 }
