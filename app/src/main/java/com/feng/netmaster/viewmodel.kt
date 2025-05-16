@@ -1,46 +1,27 @@
 package com.feng.netmaster
 
 
-import android.Manifest
 import android.app.Activity
-import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInfo
 import android.net.Uri
-import android.os.Build
-import android.os.Environment
-import android.provider.Settings.Global.getString
 import android.util.Log
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.DiffUtil
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
+import kotlinx.coroutines.channels.Channel
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.Json.Default.encodeToString
 import org.json.JSONException
-import java.io.BufferedInputStream
 import java.io.BufferedReader
-import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.io.OutputStream
-import java.util.concurrent.ExecutionException
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
 
 class menutoolbarvm : ViewModel() {
     //工具栏筛选用户APP按钮状态
@@ -388,7 +369,7 @@ object RootCommandExecutor {
                     if(line.contains("/system/bin/sh"))boollineread=false
                     line?.let { channel.trySend(it) }
                     //println("line is$line")
-                    println("boollineread is $boollineread")
+//                    println("boollineread is $boollineread")
                 }while (reader.ready()or boollineread)
 
 //                reader.useLines { lines ->

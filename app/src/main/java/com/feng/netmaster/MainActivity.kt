@@ -6,20 +6,17 @@ package com.feng.netmaster
 
 
 
-import android.Manifest
-import android.Manifest.permission
 import android.app.AlertDialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.DocumentsContract
+import android.provider.OpenableColumns
 import android.util.AttributeSet
 import android.view.KeyEvent
 import android.view.Menu
@@ -31,10 +28,8 @@ import android.webkit.MimeTypeMap
 import android.widget.EditText
 import android.widget.SearchView
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.Navigation.findNavController
@@ -51,14 +46,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import java.io.BufferedReader
 import java.io.DataOutputStream
-import java.io.File
-import java.io.InputStreamReader
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 import kotlin.properties.Delegates
-
 
 
 class MainActivity : AppCompatActivity(){
@@ -582,11 +571,13 @@ class MainActivity : AppCompatActivity(){
         intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI,downloadsDirUri)
         chooseFile.launch(Intent.createChooser(intent, getString(R.string.action_import)))
     }
-    val chooseFile = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+    val chooseFile = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { it->
 
         val uri = it.data?.data
         val fma=FileManage()
-        if (it.resultCode == RESULT_OK && uri != null && fma.checkpathlegal(uri.path)) {
+        val fileName = uri?.let { getFileNameFromUri(this, it) }
+
+        if (it.resultCode == RESULT_OK && uri != null && fma.checkpathlegal(fileName)) {
             val listjsonstring=readContentFromUri(uri)
             if(listjsonstring!="error") {
                 //清空当前列表项
@@ -617,6 +608,13 @@ class MainActivity : AppCompatActivity(){
         else
         {
             toast("无效配置文件")
+        }
+    }
+    fun getFileNameFromUri(context: Context, uri: Uri): String? {
+        return context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            cursor.moveToFirst()
+            cursor.getString(nameIndex)
         }
     }
     private fun readContentFromUri(uri: Uri):String {
