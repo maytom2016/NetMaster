@@ -13,3 +13,5 @@
 .externalNativeBuild
 .cxx
 local.properties
+settings.gradle.kts
+/gradle/wrapper/gradle-wrapper.properties

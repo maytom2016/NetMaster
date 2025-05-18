@@ -58,4 +58,15 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+
+    //markdown
+    val markwon_version="4.6.2"
+    implementation ("io.noties.markwon:core:$markwon_version")
+    implementation ("io.noties.markwon:html:$markwon_version")
+    implementation ("io.noties.markwon:ext-tables:$markwon_version")
+    implementation ("io.noties.markwon:recycler:$markwon_version")
+    implementation ("io.noties.markwon:recycler-table:$markwon_version")
+    implementation ("io.noties.markwon:image:$markwon_version")
+    implementation ("io.noties.markwon:ext-strikethrough:$markwon_version")
+    implementation ("io.noties.markwon:ext-tasklist:$markwon_version")
 }

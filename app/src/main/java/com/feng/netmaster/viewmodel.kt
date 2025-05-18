@@ -461,3 +461,26 @@ object FileUtils {
         }
     }
 }
+object MarkDownManager{
+    //转换数组为markdown的表格，第一项数组为表头，其余为列表项
+    fun convertArrayToMarkdownTable(data: ArrayList<Array<String>>): String {
+        val markdownTable = StringBuilder()
+
+        // 遍历二维数组
+        for (row in data) {
+            markdownTable.append("| ")
+            for (cell in row) {
+                markdownTable.append(cell).append(" | ")
+            }
+            markdownTable.append("\n")
+        }
+
+        // 添加表头分隔符
+        if (data.isNotEmpty()) {
+            val headerSeparator = data[0].joinToString(separator = " | ", prefix = "| ", postfix = " |\n") { ":---:" }
+            markdownTable.insert(markdownTable.indexOf("\n") + 1, headerSeparator)
+        }
+
+        return markdownTable.toString()
+    }
+}
