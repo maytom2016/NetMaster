@@ -1,26 +1,19 @@
-permissions:
-  contents: write
 name: Generated APK (Upload - Create Artifact To Github Action)
 
-env:
-  # The name of the main module repository
-  main_project_module: app
+permissions:
+  contents: write
 
-  # The name of the Play Store
+env:
+  main_project_module: app
   playstore_name: Feng
 
 on:
   push:
     tags:
-    - 'v*'
-
-
-  # Allows you to run this workflow manually from the Actions tab
-  # workflow_dispatch:
+      - 'v*'
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -34,25 +27,36 @@ jobs:
       - name: Set repository name as env variable
         run: echo "repository_name=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
 
+      # Extract version from tag (remove 'v' prefix if exists)
+      - name: Extract version from tag
+        id: extract_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          VERSION=${VERSION#v}  # Remove 'v' prefix if present
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      # Update versionName in build.gradle.kts
+      - name: Update version in build.gradle.kts
+        run: |
+          sed -i "s/versionName = \".*\"/versionName = \"${{ steps.extract_version.outputs.version }}\"/g" ${{ env.main_project_module }}/build.gradle.kts
+          cat ${{ env.main_project_module }}/build.gradle.kts | grep versionName
+
       - name: Set Up JDK
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu' # See 'Supported distributions' for available options
+          distribution: 'zulu'
           java-version: '17'
           cache: 'gradle'
 
       - name: Change wrapper permissions
         run: chmod +x ./gradlew
 
-      # Run Tests Build
       - name: Run gradle tests
         run: ./gradlew test
 
-      # Run Build Project
       - name: Build gradle project
         run: ./gradlew build
 
-      # Create APK Release
       - name: Build apk release project (APK) - ${{ env.main_project_module }} module
         run: ./gradlew assemble
 
@@ -74,26 +78,20 @@ jobs:
           rm -rf ./release/app-release-un*
           rm -rf ./release/key.jks
           rm -rf ./release/output-metadata.json
-          tar -czvf  release.tar.gz ./release
+          tar -czvf release.tar.gz ./release
 
-      # Noted For Output [main_project_module]/build/outputs/apk/release/
       - name: Upload APK Release - ${{ env.repository_name }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.date_today }} - ${{ env.playstore_name }} - ${{ env.repository_name }} - APK(s) release generated
           path: ${{ env.main_project_module }}/build/outputs/apk/release/
           
-      - name: Get version
-        id: get_version
-        run: echo "${GITHUB_REF/refs\/tags\//}" >> $env:GITHUB_OUTPUT
-             # echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-    
       - name: Release
         uses: softprops/action-gh-release@v2
-#      if: startsWith(github.ref, 'refs/tags/')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
           files: |
-           ${{ env.main_project_module }}/build/outputs/apk/release.tar.gz
+            ${{ env.main_project_module }}/build/outputs/apk/release.tar.gz
