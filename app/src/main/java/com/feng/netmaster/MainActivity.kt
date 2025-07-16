@@ -30,12 +30,14 @@ import android.widget.SearchView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.Navigation.findNavController
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.NavigationUI
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
@@ -73,9 +75,25 @@ class MainActivity : AppCompatActivity(){
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         appBarConfiguration = AppBarConfiguration(navController.graph,drawerLayout)
         setupActionBarWithNavController(navController, appBarConfiguration)
-        navView.setupWithNavController(navController)
-
-
+//        navView.setupWithNavController(navController)
+// 拦截没有root时访问iptablefragment
+        navView.setNavigationItemSelectedListener { menuItem ->
+            // 关闭抽屉
+            drawerLayout.closeDrawer(GravityCompat.START)
+            when (menuItem.itemId) {
+                R.id.iptablesfragment -> {
+                    if (RootCommandExecutor.getRootPermission()) {
+                        // 使用 NavigationUI 帮你执行导航
+                        NavigationUI.onNavDestinationSelected(menuItem, navController)
+                    } else {
+                        // 条件不满足时给个提示或直接不跳转
+                        Toast.makeText(this, getString(R.string.no_root2), Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            // 返回 true 表示消费了这个点击事件
+            true
+        }
 //toolbar的显示应用数据传递到viewmodel类中
         menutoolbarvm=menutoolbarvm()
         menutoolbarvm = ViewModelProvider(this)[menutoolbarvm::class.java]
