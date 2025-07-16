@@ -90,10 +90,16 @@ class MainActivity : AppCompatActivity(){
                         Toast.makeText(this, getString(R.string.no_root2), Toast.LENGTH_SHORT).show()
                     }
                 }
+                else -> {
+                    NavigationUI.onNavDestinationSelected(menuItem, navController)
+                }
             }
+
+
             // 返回 true 表示消费了这个点击事件
             true
         }
+
 //toolbar的显示应用数据传递到viewmodel类中
         menutoolbarvm=menutoolbarvm()
         menutoolbarvm = ViewModelProvider(this)[menutoolbarvm::class.java]
