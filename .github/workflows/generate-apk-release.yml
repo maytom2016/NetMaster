@@ -78,7 +78,6 @@ jobs:
           rm -rf ./release/app-release-un*
           rm -rf ./release/key.jks
           rm -rf ./release/output-metadata.json
-          tar -czvf release.tar.gz ./release
 
       - name: Upload APK Release - ${{ env.repository_name }}
         uses: actions/upload-artifact@v4
@@ -94,4 +93,4 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           files: |
-            ${{ env.main_project_module }}/build/outputs/apk/release.tar.gz
+             ${{ env.main_project_module }}/build/outputs/apk/release/app-release-signed.apk
